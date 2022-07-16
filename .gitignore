@@ -1,4 +1,8 @@
 options.lua
 discordia.log
 gateway.json
+*.o
+etc/logs/*.o
+etc/logs/binout
+etc/logs/3222669.json
 

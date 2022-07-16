@@ -10,28 +10,20 @@
 
 char *readtobuffer(char *filename)
 {
-	size_t buf_cx = 0;
-	size_t buf_alloc = 256;
-	char *buf = malloc(256);
-
+	char *buf;
+	size_t fsize;
 	FILE* fp = fopen(filename, "r");
-	char c;
 
-	if(fp != NULL)
-	{
-		while((c = fgetc(fp)) != EOF)
-		{
-			buf[buf_cx++] = c;
+	fseek(fp, 0, SEEK_END);
+	fsize = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
 
-			if(buf_cx >= buf_alloc)
-			{
-				buf_alloc += 256;
-				buf = realloc(buf, buf_alloc);
-			}
-		}
-	}
+	buf = malloc(fsize + 1);
+	fread(buf, fsize, 1, fp);
 	fclose(fp);
-	buf[buf_cx] = 0;
+
+	buf[fsize] = 0;
+
 	return buf;
 }
 
