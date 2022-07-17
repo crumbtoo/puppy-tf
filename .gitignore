@@ -3,6 +3,7 @@ discordia.log
 gateway.json
 *.o
 etc/logs/*.o
+etc/logs/out.png
 etc/logs/binout
 etc/logs/3222669.json
 
