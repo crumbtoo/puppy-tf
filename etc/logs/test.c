@@ -35,5 +35,6 @@ int main()
 
 	drawBoard(log);
 
+	free(buf);
 	cJSON_Delete(log);
 }

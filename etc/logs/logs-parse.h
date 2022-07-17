@@ -5,12 +5,14 @@
 #include "ints.h"
 #include "cjson/cJSON.h"
 
-tf_player parse_player(cJSON *log);
+tf_player parse_player(cJSON *playerlog);
 
 tf_class idclass(char *s);
 
 tf_game parse_game(cJSON *log);
 
 u8 getPlayerCount(cJSON *players);
+
+void sortplayers(cJSON **playerlist);
 
 #endif

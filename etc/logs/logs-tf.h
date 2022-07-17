@@ -31,7 +31,7 @@ typedef struct
 	char sid3[17];	// [U:1:1128930437]
 	u64 sid64;
 
-	tf_class class_stats[9];
+	tf_class_stats class_stats[9];
 
 	tf_team team;
 	u8 kills;

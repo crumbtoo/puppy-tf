@@ -63,8 +63,11 @@ void parse_class_stats(tf_player *player, cJSON *log)
 		if(cJSON_IsNumber(p))
 			class_stats.total_time = p->valueint;
 
+		player->class_stats[cx] = class_stats;
+
 		cx++;
 	}
+	player->class_stats[cx].class = 0;
 }
 
 /* `log` refers to a single player's JSON object */
@@ -261,5 +264,72 @@ u8 getPlayerCount(cJSON *players)
 	}
 
 	return cx;
+}
+
+/* replaces `*playerlist` with a sorted copy */
+void sortplayers(cJSON **playerlist)
+{
+	u8 playercount = getPlayerCount(*playerlist);
+	cJSON **sorted = calloc(playercount, sizeof(cJSON*));
+
+	/* create array of each player in `*playerlist` to sort */
+	u8 r_cx = 0;
+	u8 b_cx = 0;
+	for(cJSON *p = (*playerlist)->child; p != NULL; p = p->next)
+	{
+		cJSON *team = cJSON_GetObjectItemCaseSensitive(p, "team");
+
+		if(team->valuestring[0] == 'B')
+			sorted[b_cx++] = cJSON_Duplicate(p, 1);
+		else
+			sorted[playercount - 1 - r_cx++] = cJSON_Duplicate(p, 1);
+	}
+
+	cJSON *new = cJSON_CreateObject();
+
+	/* replace this SHIT later */
+	for(u8 ugh = TF_SCOUT; ugh <= TF_SPY; ugh++)
+	{
+		for(u8 i = 0; i < b_cx; i++)
+		{
+			tf_class mainclass = idclass(cJSON_GetObjectItemCaseSensitive(sorted[i], "class_stats")->child->child->valuestring);
+			if(mainclass == ugh)
+				cJSON_AddItemToObject(new, sorted[i]->string, sorted[i]);
+		}
+	}
+	for(u8 ugh = TF_SCOUT; ugh <= TF_SPY; ugh++)
+	{
+		for(u8 i = 0; i < r_cx; i++)
+		{
+			tf_class mainclass = idclass(cJSON_GetObjectItemCaseSensitive(sorted[i + b_cx], "class_stats")->child->child->valuestring);
+			if(mainclass == ugh)
+				cJSON_AddItemToObject(new, sorted[i + b_cx]->string, sorted[i + b_cx]);
+		}
+	}
+
+	*playerlist = new;
+
+
+	/* debug printing */
+	/* for(cJSON *p = new->child; p != NULL; p = p->next) */
+	/* { */
+	/* 	tf_class mainclass = idclass(cJSON_GetObjectItemCaseSensitive(p, "class_stats")->child->child->valuestring); */
+	/* 	printf("%s %d\n", p->child->valuestring, mainclass); */
+	/* } */
+	/* for(u8 i = 0; i < playercount; i++) */
+	/* { */
+	/* 	if(sorted[i] == NULL) */
+	/* 		continue; */
+
+	/* 	cJSON *team = cJSON_GetObjectItemCaseSensitive(sorted[i], "team"); */
+	/* 	char *s = NULL; */
+	/* 	tf_class mainclass = idclass(cJSON_GetObjectItemCaseSensitive(sorted[i], "class_stats")->child->child->valuestring); */
+
+	/* 	if(cJSON_IsString(team)) */
+	/* 		s = team->valuestring; */
+	/* 	printf("%d %s %s %d\n", i, s, sorted[i]->string, mainclass); */
+	/* } */
+
+	free(sorted);
 }
 
