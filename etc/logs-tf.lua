@@ -14,9 +14,9 @@ local function islogsURL(s)
 	if pat then
 		return pat
 	end
-	pat = s:match("^https://logs%.tf/"..logno.."$")
+	pat, h = s:match("^https://logs%.tf/"..logno.."#?(%d*)$")
 	if pat then
-		return pat
+		return pat, h
 	end
 
 	pat = s:match("^www%.logs%.tf/"..logno.."$")

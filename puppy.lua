@@ -4,11 +4,13 @@ local discordia = require("discordia")
 local options = require("options")
 local cmds = require("commands")
 local client = discordia.Client()
+_G.ffi = require("ffi")
 _G.steamapi = require("./etc/steamapi"):new(options.steamapikey)
 local logs = require("./etc/logs-tf.lua")
-local llogsTF = require("./etc/logs/llogsTF")
+_G.llogsTF = require("./etc/logs/llogsTF")
 local timer = require("timer")
 _G.steam = require("./etc/steam")
+_G.sqlite3 = require("lsqlite3")
 discordia.extensions()
 
 local puppypass = {
@@ -32,18 +34,25 @@ client:on("messageCreate", function(message)
 		return
 	end
 
-	local logno = logs.islogsURL(message.content)
+	local logno, h = logs.islogsURL(message.content)
 	if logno then
-		local img, err = llogsTF.renderlog(logno, "[U:1:377439446]")
+		local img, err
+
+		if h then
+			img, err = llogsTF.renderlog(logno, steam.sid64_to_sid3(h))
+		else
+			img, err = llogsTF.renderlog(logno)
+		end
 
 		print("log! - " .. img)
 
 		if err then print(err) end
 
-
 		message.channel:send {
 			file = img
 		}
+
+		os.remove(img)
 	end
 	
 end)

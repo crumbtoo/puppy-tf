@@ -241,7 +241,7 @@ static void drawPlayers_row(gfx_state state, tf_player player, cairo_t *cr, u16 
 
 	if(state.highlight && strcmp(player.sid3 + 5, state.highlight + 5) == 0)
 	{
-		cairo_set_source_rgba(cr, CAT_OVERLAY1, 0.1);
+		cairo_set_source_rgb(cr, 0.133, 0.133, 0.188);
 		cairo_rectangle(cr, x, y, state.width - (2*state.padding), LOGS_ROW_HEIGHT);
 		cairo_fill(cr);
 	}

@@ -6,4 +6,7 @@ etc/logs/*.o
 etc/logs/out.png
 etc/logs/binout
 etc/logs/3222669.json
+etc/lsqlite3/lsqlite3_fsl09x/
+etc/lsqlite3/lsqlite3_fsl09x.zip
+puppy.db
 

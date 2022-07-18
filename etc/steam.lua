@@ -10,10 +10,13 @@ function steam.sid64_to_sid(steamID64)
 end
 
 function steam.sid64_to_sid3(steamID64)
-	local z = math.floor((steamID64 - 76561197960265728) / 2)
-	local y = steamID64 % 2
+	local s = "[U:1:"
+	ffi.cdef[[uint64_t strtoull(const char*);]]
+	local n = ffi.C.strtoull(steamID64)
+	local acc = n - 76561197960265728ULL
+	s = s .. tonumber(acc) .. ']'
 
-	return string.format("[U:1:%d]", z*2+y)
+	return s
 end
 
 return steam
