@@ -225,7 +225,10 @@ tf_game parse_game(cJSON *log)
 
 	p = cJSON_GetObjectItemCaseSensitive(log, "length");
 	if(cJSON_IsNumber(p))
+	{
 		game.match_length = p->valueint;
+		game.match_length_minutes = p->valueint / 60;
+	}
 
 
 

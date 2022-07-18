@@ -21,6 +21,7 @@ typedef struct
 	u8 blu_score;
 	u8 red_score;
 	u16 match_length;
+	u8 match_length_minutes;
 	char map[32];
 	char title[64];
 	u32 date;
@@ -40,6 +41,7 @@ typedef struct
 	u8 suicides;
 	u8 drops;
 	u8 as;			// airshots
+	u8 backstabs;
 	f64 kapd;
 	f64 kpd;
 	u32 dmg;
@@ -53,7 +55,6 @@ typedef struct
 	u16 ubers;
 	u16 medkits;
 	u16 medkits_hp;
-	u16 backstabs;
 	u16 headshots;
 	u16 headshots_hit;
 	u16 sentries;

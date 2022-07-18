@@ -31,7 +31,6 @@ int main()
 {
 	char *buf = readtobuffer("./3222669.json");
 	cJSON *log = cJSON_Parse(buf);
-	cJSON *players = cJSON_GetObjectItemCaseSensitive(log, "players");
 
 	drawBoard(log);
 

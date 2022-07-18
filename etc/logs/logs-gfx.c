@@ -139,8 +139,13 @@ void drawBanner(gfx_state state, cairo_t *cr, u8 blu_score, u8 red_score)
 }
 
 #define LOGS_ROW_HEIGHT 64
-#define LOGS_TEAM_LENGTH 146
-#define LOGS_NAME_WIDTH 430
+#define LOGS_TEAM_WIDTH 140
+#define LOGS_NAME_WIDTH 300
+#define LOGS_INNER_PADDING 8
+#define LOGS_CLASS_WIDTH (3*40) 
+#define LOGS_SPLIT_WIDTH 4
+#define LOGS_3DIGIT_WIDTH 40
+#define LOGS_5DIGIT_WIDTH 70
 
 /* returns x offset for next draw off of */
 static u16 drawPlayers_team(cairo_t *cr, u16 x, u16 y, cJSON *log, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
@@ -150,15 +155,15 @@ static u16 drawPlayers_team(cairo_t *cr, u16 x, u16 y, cJSON *log, tf_player pla
 		cairo_set_source_rgb(cr, CAT_EXTERN_BLUE);
 	else
 		cairo_set_source_rgb(cr, CAT_EXTERN_RED);
-	cairo_rectangle(cr, x, y, LOGS_TEAM_LENGTH, LOGS_ROW_HEIGHT);
+	cairo_rectangle(cr, x, y, LOGS_TEAM_WIDTH, LOGS_ROW_HEIGHT);
 	cairo_fill(cr);
 
 	/* faint shadows around east and south sides of block */
 	/* minus 1's are to adjust for the line width */
 	cairo_set_source_rgba(cr, 0, 0, 0, 0.05);
 	cairo_move_to(cr, x, y + LOGS_ROW_HEIGHT - 1);
-	cairo_line_to(cr, x + LOGS_TEAM_LENGTH - 1, y + LOGS_ROW_HEIGHT - 1);
-	cairo_line_to(cr, x + LOGS_TEAM_LENGTH - 1, y);
+	cairo_line_to(cr, x + LOGS_TEAM_WIDTH - 1, y + LOGS_ROW_HEIGHT - 1);
+	cairo_line_to(cr, x + LOGS_TEAM_WIDTH - 1, y);
 	cairo_set_line_width(cr, 2);
 	cairo_stroke(cr);
 
@@ -179,7 +184,7 @@ static u16 drawPlayers_team(cairo_t *cr, u16 x, u16 y, cJSON *log, tf_player pla
 	/* center text */
 	i32 cenx, ceny;
 	pango_layout_get_pixel_size(layout, &cenx, &ceny);
-	cenx = (x + (146 >> 1)) - (cenx >> 1);
+	cenx = (x + (LOGS_TEAM_WIDTH >> 1)) - (cenx >> 1);
 	ceny = (y + (LOGS_ROW_HEIGHT >> 1)) - (ceny >> 1);
 
 	cairo_set_source_rgb(cr, CAT_TEXT);
@@ -192,7 +197,7 @@ static u16 drawPlayers_team(cairo_t *cr, u16 x, u16 y, cJSON *log, tf_player pla
 	pango_font_description_set_absolute_size(fontd, oldsize);
 	pango_layout_set_font_description(layout, fontd);
 
-	return LOGS_TEAM_LENGTH;
+	return LOGS_TEAM_WIDTH;
 }
 
 static u16 drawPlayers_name(cairo_t *cr, u16 x, u16 y, cJSON *log, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
@@ -210,16 +215,16 @@ static u16 drawPlayers_name(cairo_t *cr, u16 x, u16 y, cJSON *log, tf_player pla
 	cairo_set_source_rgb(cr, CAT_TEXT);
 	pango_cairo_show_layout(cr, layout);
 
-	return w1;
+	return LOGS_NAME_WIDTH;
 }
 
 static u16 drawPlayers_split(cairo_t *cr, u16 x, u16 y)
 {
 	cairo_set_source_rgba(cr, CAT_OVERLAY0, 0.2);
-	cairo_rectangle(cr, x, y, 4, LOGS_ROW_HEIGHT);
+	cairo_rectangle(cr, x, y, LOGS_SPLIT_WIDTH, LOGS_ROW_HEIGHT);
 	cairo_fill(cr);
 
-	return 4;
+	return LOGS_SPLIT_WIDTH;
 }
 
 static void drawPlayers_row(gfx_state state, cairo_t *cr, u16 x, u16 y, bool color)
@@ -232,12 +237,7 @@ static void drawPlayers_row(gfx_state state, cairo_t *cr, u16 x, u16 y, bool col
 	cairo_fill(cr);
 }
 
-static void drawPlayers_stats(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
-{
-	
-}
-
-static void drawPlayers_classes(cairo_t *cr, u16 x, u16 y, tf_player player)
+static u16 drawPlayers_classes(cairo_t *cr, u16 x, u16 y, tf_player player)
 {
 	/* printf("%s ", player.sid3); */
 	u8 offset = 0;
@@ -263,6 +263,8 @@ static void drawPlayers_classes(cairo_t *cr, u16 x, u16 y, tf_player player)
 
 		offset += 40;
 	}
+
+	return LOGS_CLASS_WIDTH;
 }
 
 static void drawPlayers_labels(gfx_state state, cairo_t *cr, u16 y, PangoFontDescription *fontd, PangoLayout *layout)
@@ -271,34 +273,156 @@ static void drawPlayers_labels(gfx_state state, cairo_t *cr, u16 y, PangoFontDes
 	u16 oldweight = pango_font_description_get_weight(fontd);
 
 	pango_font_description_set_absolute_size(fontd, 23 * PANGO_SCALE);
-	pango_font_description_set_weight(fontd, PANGO_WEIGHT_MEDIUM);
+	pango_font_description_set_weight(fontd, PANGO_WEIGHT_BOLD);
 	pango_layout_set_font_description(layout, fontd);
 	
 	pango_layout_set_text(layout, "Team", -1);
 
-	i32 w, h;
-	pango_layout_get_pixel_size(layout, &w, &h);
+	u32 x = state.padding;
+	i32 w1, h1;
+	pango_layout_get_pixel_size(layout, &w1, &h1);
 
 	/* center on Y axis */
-	u32 ceny = ((LOGS_ROW_HEIGHT >> 1) + y) - (h >> 1);
+	u32 ceny = ((LOGS_ROW_HEIGHT >> 1) + y) - (h1 >> 1);
+	cairo_move_to(cr, state.padding + ((LOGS_TEAM_WIDTH >> 1) - (w1 >> 1)), ceny);
 
 
-	cairo_move_to(cr, state.padding + ((LOGS_TEAM_LENGTH >> 1) - (w >> 1)), ceny);
-	printf("%d %d\n", w, h);
+	/* pango_cairo_show_layout(cr, layout); */
 
+#define draw_label3(text) \
+	{ \
+		i32 w; \
+		cairo_set_source_rgb(cr, CAT_TEXT); \
+		pango_layout_set_text(layout, text, -1); \
+		pango_layout_get_pixel_size(layout, &w, NULL); \
+		cairo_move_to(cr, x + ((((LOGS_SPLIT_WIDTH*3) + (LOGS_INNER_PADDING*2) + LOGS_3DIGIT_WIDTH) >> 1) - (w >> 1)), ceny); \
+		pango_cairo_show_layout(cr, layout); \
+	}
+#define draw_label5(text) \
+	{ \
+		i32 w; \
+		cairo_set_source_rgb(cr, CAT_TEXT); \
+		pango_layout_set_text(layout, text, -1); \
+		pango_layout_get_pixel_size(layout, &w, NULL); \
+		cairo_move_to(cr, x + ((((LOGS_SPLIT_WIDTH*1) + (LOGS_INNER_PADDING*2) + LOGS_5DIGIT_WIDTH) >> 1) - (w >> 1)), ceny); \
+		pango_cairo_show_layout(cr, layout); \
+	}
 
-	cairo_set_source_rgb(cr, CAT_TEXT);
-	pango_cairo_show_layout(cr, layout);
+	/* team label */
+	{
+		i32 w;
+		cairo_set_source_rgb(cr, CAT_TEXT);
+		pango_layout_set_text(layout, "Team", -1);
+		pango_layout_get_pixel_size(layout, &w, NULL);
+		cairo_move_to(cr, x + (LOGS_TEAM_WIDTH >> 1) - (w >> 1), ceny); \
+		pango_cairo_show_layout(cr, layout); \
+	}
 
-	drawPlayers_split(cr, state.padding + LOGS_TEAM_LENGTH, y);
+	/* name label */
+	{
+		i32 w;
+		cairo_set_source_rgb(cr, CAT_TEXT);
+		pango_layout_set_text(layout, "Name", -1);
+		pango_layout_get_pixel_size(layout, &w, NULL);
+		cairo_move_to(cr, x + (LOGS_TEAM_WIDTH + LOGS_SPLIT_WIDTH) + LOGS_INNER_PADDING, ceny); \
+		pango_cairo_show_layout(cr, layout); \
+	}
 
-	pango_layout_set_text(layout, "Name", -1);
-	cairo_move_to(cr, state.padding + LOGS_TEAM_LENGTH + 4 + 8, ceny);
-	cairo_set_source_rgb(cr, CAT_TEXT);
-	pango_cairo_show_layout(cr, layout);
+	/* classes label */
+	{
+		i32 w;
+		cairo_set_source_rgb(cr, CAT_TEXT);
+		pango_layout_set_text(layout, "Classes", -1);
+		pango_layout_get_pixel_size(layout, &w, NULL);
+		cairo_move_to(cr, x + (LOGS_TEAM_WIDTH + LOGS_SPLIT_WIDTH*2 + LOGS_NAME_WIDTH + LOGS_INNER_PADDING*2) + ((LOGS_SPLIT_WIDTH + LOGS_INNER_PADDING*2 + LOGS_CLASS_WIDTH) >> 1) - (w >> 1), ceny); \
+		pango_cairo_show_layout(cr, layout); \
+	}
 
-	drawPlayers_split(cr, state.padding + LOGS_NAME_WIDTH - 8, y);
-
+	x += LOGS_TEAM_WIDTH;
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_SPLIT_WIDTH;
+	x += LOGS_NAME_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_CLASS_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label3("K")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_3DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label3("A")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_3DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label3("D")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_3DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label5("DA")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_5DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label3("DPM")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_3DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label3("KAD")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_3DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label3("KD")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_3DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label5("DT")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_5DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label3("DTM")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_3DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label3("BS")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_3DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label3("HS")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_3DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label3("AS")
+	x += drawPlayers_split(cr, x, y);
+	x += LOGS_INNER_PADDING;
+	x += LOGS_3DIGIT_WIDTH;
+	x += LOGS_INNER_PADDING;
+	x += LOGS_SPLIT_WIDTH;
+	draw_label3("CAP")
+	x += drawPlayers_split(cr, x, y);
 
 	/* restore font */
 	pango_font_description_set_absolute_size(fontd, oldsize);
@@ -306,9 +430,257 @@ static void drawPlayers_labels(gfx_state state, cairo_t *cr, u16 y, PangoFontDes
 	pango_layout_set_font_description(layout, fontd);
 }
 
+static u16 drawPlayers_kills(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[4];
+	snprintf(buf, 3, "%d", player.kills);
+	buf[3] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_3DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_3DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_assists(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[4];
+	snprintf(buf, 3, "%d", player.assists);
+	buf[3] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_3DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_3DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_deaths(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[4];
+	snprintf(buf, 3, "%d", player.deaths);
+	buf[3] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_3DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_3DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_damage(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[6];
+	snprintf(buf, 5, "%d", player.dmg);
+	buf[5] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_5DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_5DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_dpm(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[6];
+	snprintf(buf, 5, "%d", player.dapm);
+	buf[5] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_3DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_3DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_kapd(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[6];
+	snprintf(buf, 5, "%.1f", player.kapd);
+	buf[5] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_3DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_3DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_kpd(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[6];
+	snprintf(buf, 5, "%.1f", player.kpd);
+	buf[5] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_3DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_3DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_dt(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[6];
+	snprintf(buf, 5, "%d", player.dt);
+	buf[5] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_5DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_5DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_dtpm(cairo_t *cr, u16 x, u16 y, tf_player player, tf_game game, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[4];
+	snprintf(buf, 4, "%d", (int)(player.dt / game.match_length_minutes));
+	buf[3] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_3DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_3DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_backstabs(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[4];
+	snprintf(buf, 4, "%d", player.backstabs);
+	buf[3] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_3DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_3DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_headshots(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[4];
+	snprintf(buf, 4, "%d", player.headshots);
+	buf[3] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_3DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_3DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_airshots(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[4];
+	snprintf(buf, 4, "%d", player.as);
+	buf[3] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_3DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_3DIGIT_WIDTH;
+}
+
+static u16 drawPlayers_caps(cairo_t *cr, u16 x, u16 y, tf_player player, PangoFontDescription *fontd, PangoLayout *layout)
+{
+	/* int to string */
+	char buf[4];
+	snprintf(buf, 4, "%d", player.cpc);
+	buf[3] = 0;
+
+	pango_layout_set_text(layout, buf, -1);
+
+	i32 w;
+	pango_layout_get_pixel_size(layout, &w, NULL);
+
+	cairo_move_to(cr, x + (LOGS_3DIGIT_WIDTH >> 1) - (w >> 1), y);
+	cairo_set_source_rgb(cr, CAT_TEXT);
+	pango_cairo_show_layout(cr, layout);
+
+	return LOGS_3DIGIT_WIDTH;
+}
+
 void drawPlayers(gfx_state state, cairo_t *cr, cJSON *log)
 {
 	cJSON *playerlist = cJSON_GetObjectItemCaseSensitive(log, "players");
+	tf_game game = parse_game(log);
 
 	PangoFontDescription *font_description;
 
@@ -320,6 +692,10 @@ void drawPlayers(gfx_state state, cairo_t *cr, cJSON *log)
 	PangoLayout *layout = pango_cairo_create_layout(cr);
 	pango_layout_set_font_description(layout, font_description);
 
+	/* offset to add to `y` to center standard-sized text */
+	i32 cenyo;
+	pango_layout_get_pixel_size(layout, NULL, &cenyo);
+	cenyo = (LOGS_ROW_HEIGHT >> 1) - (cenyo >> 1);
 
 	/* sort playerlist so teams are grouped together */
 	sortplayers(&playerlist);
@@ -336,15 +712,81 @@ void drawPlayers(gfx_state state, cairo_t *cr, cJSON *log)
 		drawPlayers_row(state, cr, x, y, color);
 		x += drawPlayers_team(cr, x, y, log, player, font_description, layout);
 		x += drawPlayers_split(cr, x, y);
-		x += drawPlayers_name(cr, x + 8, y, log, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_name(cr, x, y, log, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
 
-		/* names column hard limit */
-		x = LOGS_NAME_WIDTH + 16;
 		x += drawPlayers_split(cr, x, y);
-		drawPlayers_classes(cr, x + 8, y, player);
-		x = 430 + 16 + 8 + 8 + 8 + (3 * 40);
-		drawPlayers_split(cr, x, y);
-		drawPlayers_stats(cr, x, y, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_classes(cr, x, y, player);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_kills(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_assists(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_deaths(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_damage(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_dpm(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_kapd(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_kpd(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_dt(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_dtpm(cr, x, y + cenyo, player, game, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_backstabs(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_headshots(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_airshots(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+		x += drawPlayers_split(cr, x, y);
+		x += LOGS_INNER_PADDING;
+		x += drawPlayers_caps(cr, x, y + cenyo, player, font_description, layout);
+		x += LOGS_INNER_PADDING;
+		x += LOGS_SPLIT_WIDTH;
+
 
 
 		color = !color;
@@ -359,7 +801,7 @@ void drawPlayers(gfx_state state, cairo_t *cr, cJSON *log)
 void drawBoard(cJSON *log)
 {
 	/* u16 width = 1490; */
-	u16 width = 1600;
+	u16 width = 1544;
 	/* each player row is LOGS_ROW_HEIGHT tall; 24px padding on top and bottom;
 	team score banner is 150px tall
 	space between banner and score is 48px
