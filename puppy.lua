@@ -6,6 +6,8 @@ local cmds = require("commands")
 local client = discordia.Client()
 _G.steamapi = require("./etc/steamapi"):new(options.steamapikey)
 local logs = require("./etc/logs-tf.lua")
+local llogsTF = require("./etc/logs/llogsTF")
+local timer = require("timer")
 _G.steam = require("./etc/steam")
 discordia.extensions()
 
@@ -30,9 +32,18 @@ client:on("messageCreate", function(message)
 		return
 	end
 
-	local n = logs.islogsURL(message.content)
-	if n then
-		message.channel:send("logs above - " .. n)
+	local logno = logs.islogsURL(message.content)
+	if logno then
+		local img, err = llogsTF.renderlog(logno, "[U:1:377439446]")
+
+		print("log! - " .. img)
+
+		if err then print(err) end
+
+
+		message.channel:send {
+			file = img
+		}
 	end
 	
 end)

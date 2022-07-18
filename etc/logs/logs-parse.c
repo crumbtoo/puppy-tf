@@ -77,6 +77,7 @@ tf_player parse_player(cJSON *log)
 	cJSON *p = NULL;
 
 	strcpy(player.sid3, log->string);
+	player.sid3[16] = 0;
 
 	parse_class_stats(&player, log);
 

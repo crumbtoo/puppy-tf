@@ -13,6 +13,7 @@ typedef struct
 	u16 width;
 	u16 height;
 	u8 padding;
+	const char *highlight; /* player to highlught */
 } gfx_state;
 
 static void drawRedScore(gfx_state state, cairo_t *cr, f64 lb, f64 rb, f64 tb, f64 bb, u8 score)
@@ -227,14 +228,23 @@ static u16 drawPlayers_split(cairo_t *cr, u16 x, u16 y)
 	return LOGS_SPLIT_WIDTH;
 }
 
-static void drawPlayers_row(gfx_state state, cairo_t *cr, u16 x, u16 y, bool color)
+static void drawPlayers_row(gfx_state state, tf_player player, cairo_t *cr, u16 x, u16 y, bool color)
 {
+	/* printf("%s - %s\n", player.sid3 + 5, state.highlight + 5); */
 	if(color)
 		cairo_set_source_rgb(cr, CAT_CRUST);
 	else
 		cairo_set_source_rgb(cr, CAT_MANTLE);
+
 	cairo_rectangle(cr, x, y, state.width - (2*state.padding), LOGS_ROW_HEIGHT);
 	cairo_fill(cr);
+
+	if(state.highlight && strcmp(player.sid3 + 5, state.highlight + 5) == 0)
+	{
+		cairo_set_source_rgba(cr, CAT_OVERLAY1, 0.1);
+		cairo_rectangle(cr, x, y, state.width - (2*state.padding), LOGS_ROW_HEIGHT);
+		cairo_fill(cr);
+	}
 }
 
 static u16 drawPlayers_classes(cairo_t *cr, u16 x, u16 y, tf_player player)
@@ -247,15 +257,15 @@ static u16 drawPlayers_classes(cairo_t *cr, u16 x, u16 y, tf_player player)
 
 		switch(player.class_stats[i].class)
 		{
-			case TF_SCOUT:		icon = cairo_image_surface_create_from_png("class-icons/scout.png"); break;
-			case TF_SOLDIER:	icon = cairo_image_surface_create_from_png("class-icons/soldier.png"); break;
-			case TF_PYRO:		icon = cairo_image_surface_create_from_png("class-icons/pyro.png"); break;
-			case TF_DEMOMAN:	icon = cairo_image_surface_create_from_png("class-icons/demoman.png"); break;
-			case TF_HEAVY:		icon = cairo_image_surface_create_from_png("class-icons/heavy.png"); break;
-			case TF_ENGINEER:	icon = cairo_image_surface_create_from_png("class-icons/engineer.png"); break;
-			case TF_MEDIC:		icon = cairo_image_surface_create_from_png("class-icons/medic.png"); break;
-			case TF_SNIPER:		icon = cairo_image_surface_create_from_png("class-icons/sniper.png"); break;
-			case TF_SPY:		icon = cairo_image_surface_create_from_png("class-icons/spy.png"); break;
+			case TF_SCOUT:		icon = cairo_image_surface_create_from_png("resources/class-icons/scout.png"); break;
+			case TF_SOLDIER:	icon = cairo_image_surface_create_from_png("resources/class-icons/soldier.png"); break;
+			case TF_PYRO:		icon = cairo_image_surface_create_from_png("resources/class-icons/pyro.png"); break;
+			case TF_DEMOMAN:	icon = cairo_image_surface_create_from_png("resources/class-icons/demoman.png"); break;
+			case TF_HEAVY:		icon = cairo_image_surface_create_from_png("resources/class-icons/heavy.png"); break;
+			case TF_ENGINEER:	icon = cairo_image_surface_create_from_png("resources/class-icons/engineer.png"); break;
+			case TF_MEDIC:		icon = cairo_image_surface_create_from_png("resources/class-icons/medic.png"); break;
+			case TF_SNIPER:		icon = cairo_image_surface_create_from_png("resources/class-icons/sniper.png"); break;
+			case TF_SPY:		icon = cairo_image_surface_create_from_png("resources/class-icons/spy.png"); break;
 		}
 
 		cairo_set_source_surface(cr, icon, x + offset, ((LOGS_ROW_HEIGHT >> 1) + y) - 20);
@@ -709,7 +719,7 @@ void drawPlayers(gfx_state state, cairo_t *cr, cJSON *log)
 		u16 x = state.padding;
 		tf_player player = parse_player(p);
 
-		drawPlayers_row(state, cr, x, y, color);
+		drawPlayers_row(state, player, cr, x, y, color);
 		x += drawPlayers_team(cr, x, y, log, player, font_description, layout);
 		x += drawPlayers_split(cr, x, y);
 		x += LOGS_INNER_PADDING;
@@ -798,7 +808,7 @@ void drawPlayers(gfx_state state, cairo_t *cr, cJSON *log)
 	pango_font_description_free(font_description);
 }
 
-void drawBoard(cJSON *log)
+void drawBoard(cJSON *log, const char *output, const char *highlight)
 {
 	/* u16 width = 1490; */
 	u16 width = 1544;
@@ -812,6 +822,7 @@ void drawBoard(cJSON *log)
 	state.width = width;
 	state.height = height;
 	state.padding = 24;
+	state.highlight = highlight;
 
 	cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
 	cairo_t *cr = cairo_create(surface);
@@ -824,6 +835,6 @@ void drawBoard(cJSON *log)
 	drawPlayers(state, cr, log);
 
 	cairo_destroy(cr);
-	cairo_surface_write_to_png(surface, "out.png");
+	cairo_surface_write_to_png(surface, output);
 	cairo_surface_destroy(surface);
 }
