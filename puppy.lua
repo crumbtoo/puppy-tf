@@ -29,7 +29,9 @@ client:on("messageCreate", function(message)
 		local argv = message.content:split(" ")
 		local command = cmds[table.remove(argv, 1):sub(2)]
 		if command then
-			command.call(argv, message, puppypass)
+			if command.call(argv, message, puppypass) == -1 then
+				message.channel:send("usage: " .. command.usage)
+			end
 		end
 		return
 	end
@@ -53,6 +55,7 @@ client:on("messageCreate", function(message)
 		}
 
 		os.remove(img)
+		return
 	end
 	
 end)

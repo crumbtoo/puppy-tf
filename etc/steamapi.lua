@@ -34,14 +34,14 @@ function steamapi:ResolveVanityURL(vanityurl)
 
 	if res.code > 299 then
 		print("failed to fetch: " .. res.reason)
-		return
+		return nil
 	else
 		local j = json.parse(body).response
 		if j.success == 1 then
 			return j
 		else
 			print("ResolveVanityURL: steam success != 1")
-			return j
+			return nil
 		end
 	end
 end
@@ -53,10 +53,11 @@ function steamapi:GetPlayerSummaries(steamids)
 
 	if res.code > 299 then
 		print("failed to fetch: " .. res.reason)
-		return
+		return nil
 	else
 		local j = json.parse(body).response
-		return j
+		print(body)
+		return j;
 	end
 end
 
