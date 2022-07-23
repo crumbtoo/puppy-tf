@@ -2,7 +2,9 @@ options.lua
 discordia.log
 gateway.json
 *.o
+deps/*.so
 etc/logs/*.o
+etc/logs/*.so
 etc/logs/out.png
 etc/logs/binout
 etc/logs/3222669.json
