@@ -1,6 +1,5 @@
 local function cmd_log(argv, message)
-	local offset
-	if argv[1] then offset = argv[1] else offset = 0 end
+	local offset = argv[1] or 0
 
 	local db = sqlite3.open("puppy.db")
 
@@ -18,6 +17,7 @@ local function cmd_log(argv, message)
 			if err then print(err) end
 
 			message.channel:send {
+				content = "https://logs.tf/"..logno,
 				file = img
 			}
 

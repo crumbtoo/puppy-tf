@@ -47,22 +47,13 @@ end
 
 user_options["steamid"] = uo_steamid
 
-local function cmd_set(argv, message)
-	local db;
-
-	local f = io.open("puppy.db", "r")
-	if f == nil then
-		db = sqlite3.open("puppy.db")
-		db:exec[=[
-			CREATE TABLE users(id text primary key, sid64 text)
-		]=]
-	else
-		io.close(f)
-		db = sqlite3.open("puppy.db")
-	end
+local function cmd_set(argv, message, options)
+	local db = sqlite3.open(options.dbname)
 
 	if user_options[argv[1]] then
 		user_options[argv[1]](argv, message, db)
+	else
+		message.channel:sendf("unknown field `%s`", argv[1])
 	end
 	db:close();
 end
