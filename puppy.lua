@@ -9,6 +9,7 @@ _G.steamapi = require("./etc/steamapi"):new(options.steamapikey)
 local logs = require("./etc/logs-tf.lua")
 local misctf = require("./etc/misc-tf.lua")
 _G.llogsTF = require("./etc/logs/llogsTF")
+local ssfetch = require("./etc/ssfetch.so")
 local timer = require("timer")
 _G.steam = require("./etc/steam")
 _G.sqlite3 = require("lsqlite3")
@@ -69,12 +70,34 @@ client:on("messageCreate", function(message)
 	end
 
 	-- if msg is tf2 connect info
-	if misctf.ifTF2Connect(message.content) then
+	local hostname, port, password = misctf.ifTF2Connect(message.content)
+	if hostname then
+		local info = ssfetch.fetch(hostname, port)
+		if not info then return end
+
+		local connect = "steam://connect/"..hostname
+
+		if port then connect = connect..":"..port end
+		if password then connect = connect..'/'..password:gsub('"', "") end
+
+		if info.vac == "secured" then
+			vac = "VAC Secured"
+		else
+			vac = "VAC Unsecured"
+		end
+
+		print(connect)
+
 		message.channel:send {
 			embed = {
-				title = "serveme.tf",
-				description = "5/24 Players",
-				url = "https://developer.valvesoftware.com/wiki/Server_queries"
+				title = info.name,
+				description = "**"..connect.."**"..'\n'
+				..info.map..'\n'
+				..string.format("%d/%d Players (%d bots)", info.playercount, info.maxplayers, info.botcount),
+
+				footer = {
+					text = string.format("%s (%s)", vac, info.game)
+				}
 			}
 		}
 

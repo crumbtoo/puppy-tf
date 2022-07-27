@@ -11,7 +11,7 @@ logs-gfx.o: logs-gfx.c
 	clang -c $(CFLAGS) logs-gfx.c
 
 llogsTF.so: llogsTF.c
-	clang llogsTF.c $(OBJS) -o llogsTF.so -shared -fPIC $(CFLAGS) $(shell pkg-config --libs --cflags luajit libcurl)
+	clang llogsTF.c $(OBJS) -o llogsTF.so -shared -fPIC $(CFLAGS) $(shell pkg-config --libs --cflags luajit) -L.. -l:qcurl.so
 
 test: test.c
 	clang -o binout $(CFLAGS) test.c $(OBJS)

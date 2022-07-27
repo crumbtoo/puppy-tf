@@ -3,6 +3,7 @@ discordia.log
 gateway.json
 *.o
 deps/*.so
+etc/test.lua
 etc/logs/*.o
 etc/logs/*.so
 etc/logs/out.png

@@ -2,7 +2,7 @@
 #define LOGS_PARSE_H
 
 #include "logs-tf.h"
-#include "ints.h"
+#include "../../deps/tbs/types.h"
 #include "cjson/cJSON.h"
 
 tf_player parse_player(cJSON *playerlog);

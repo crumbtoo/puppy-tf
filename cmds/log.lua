@@ -1,7 +1,7 @@
-local function cmd_log(argv, message)
+local function cmd_log(argv, message, options)
 	local offset = argv[1] or 0
 
-	local db = sqlite3.open("puppy.db")
+	local db = sqlite3.open(options.dbname)
 
 	for row in db:nrows("SELECT * FROM users WHERE id == "..message.author.id) do
 		if not row.sid64 then message.channel:send("no steam profile linked. use ``set steamid``") return end
