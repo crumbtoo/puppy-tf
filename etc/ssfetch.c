@@ -2,10 +2,11 @@
 #include <assert.h>
 
 #include <ssq/a2s.h>
-#include <tbs/types.h>
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+
+#include "../deps/tbs/tbs/types.h"
 
 #define DEFAULT_PORT 27015
 
