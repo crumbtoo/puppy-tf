@@ -1,4 +1,4 @@
-# libraries uses
+# libraries used
 - [discordia](https://github.com/SinisterRectus/Discordia)
 - [cJSON](https://github.com/DaveGamble/cJSON/)
 - [cairo](https://cairographics.org/)
