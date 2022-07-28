@@ -3,7 +3,6 @@
 
 #include <cjson/cJSON.h>
 #include <pango/pangocairo.h>
-#include "../../deps/tbs/types.h"
 
 void drawBanner(cairo_surface_t *surface, cairo_t *cr);
 void drawBoard(cJSON *log, char *output_name, const char *highlight_sid3);

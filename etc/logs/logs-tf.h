@@ -1,7 +1,7 @@
 #ifndef LOGS_TF_H
 #define LOGS_TF_H
 
-#include "../../deps/tbs/types.h"
+#include "../../deps/tbs/tbs/types.h"
 
 typedef enum {TF_RED, TF_BLUE} tf_team;
 typedef enum {TF_SCOUT = 1, TF_SOLDIER, TF_PYRO, TF_DEMOMAN, TF_HEAVY, TF_ENGINEER, TF_MEDIC, TF_SNIPER, TF_SPY} tf_class;

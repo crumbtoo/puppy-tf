@@ -8,7 +8,7 @@
 #include <curl/curl.h>
 
 #include "logs-gfx.h"
-#include "../../deps/tbs/types.h"
+#include "../../deps/tbs/tbs/types.h"
 #include "../qcurl.h"
 
 static const char *getTmpDir()

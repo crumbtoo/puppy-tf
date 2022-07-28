@@ -6,7 +6,7 @@
 #include "logs-tf.h"
 #include "catppuccin.h"
 #include "logs-parse.h"
-#include "../../deps/tbs/types.h"
+#include "../../deps/tbs/tbs/types.h"
 
 typedef struct 
 {

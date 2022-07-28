@@ -1,3 +1,9 @@
+[submodule "deps/tbs"]
+	path = deps/tbs
+	url = https://github.com/crumbtoo/tbs.git
+[submodule "deps/--force"]
+	path = deps/--force
+	url = https://github.com/BinaryAlien/libssq.git
 [submodule "deps/libssq"]
 	path = deps/libssq
-	url = https://github.com/BinaryAlien/libssq
+	url = https://github.com/BinaryAlien/libssq.git
