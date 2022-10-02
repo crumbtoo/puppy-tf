@@ -8,3 +8,4 @@ local function cmd_echo(argv, message)
 end
 
 return cmd_echo
+

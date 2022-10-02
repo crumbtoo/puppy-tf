@@ -25,50 +25,13 @@ client:on("ready", function()
 
 		local db = sqlite3.open(options.dbname)
 		db:exec("CREATE TABLE users(id text primary key, sid64 text)")
+		db:close()
 	else
 		io.close(dbcheck)
 	end
 end)
 
-client:on("messageCreate", function(message)
-	if message.author.bot then return end
-
-	-- if msg starts with prefix, run command
-	if message.content:sub(1, #options.prefix) == options.prefix then
-		local argv = message.content:split(" ")
-		local command = cmds[table.remove(argv, 1):sub(2)]
-		if command then
-			if command.call(argv, message, options) == -1 then
-				message.channel:send("usage: " .. command.usage)
-			end
-		end
-		return
-	end
-
-	-- if msg is log
-	local logno, h = logs.islogsURL(message.content)
-	if logno then
-		local img, err
-
-		if h then
-			img, err = llogsTF.renderlog(logno, steam.sid64_to_sid3(h))
-		else
-			img, err = llogsTF.renderlog(logno)
-		end
-
-		print("log! - " .. img)
-
-		if err then print(err) end
-
-		message.channel:send {
-			content = "https://logs.tf/"..logno,
-			file = img
-		}
-
-		os.remove(img)
-		return
-	end
-
+function show_tf2_server_info(message)
 	-- if msg is tf2 connect info
 	local hostname, port, password = misctf.ifTF2Connect(message.content)
 	if hostname then
@@ -102,6 +65,72 @@ client:on("messageCreate", function(message)
 		}
 
 		return
+	end
+end
+
+function docommand(message)
+	-- if msg starts with prefix, run command
+	if message.content:sub(1, #options.prefix) == options.prefix then
+		local argv = message.content:split(" ")
+		local command = cmds[table.remove(argv, 1):sub(2)]
+		if command then
+			if command.call(argv, message, options) == -1 then
+				message.channel:send("usage: " .. command.usage)
+			end
+		end
+		return
+	end
+end
+
+function show_log_info(message)
+	local logno, h = logs.islogsURL(message.content)
+	if logno then
+		local img, err
+
+		if h then
+			img, err = llogsTF.renderlog(logno, steam.sid64_to_sid3(h))
+		else
+			img, err = llogsTF.renderlog(logno)
+		end
+
+		print("log! - " .. img)
+
+		if err then print(err) end
+
+		message.channel:send {
+			content = "https://logs.tf/"..logno,
+			file = img
+		}
+
+		os.remove(img)
+		return
+	end
+end
+
+client:on("messageCreate", function(message)
+	if message.author.bot then return end
+
+	-- if not current_vc[message.guild.id] then print("none") else print(current_vc[message.guild.id].id) end
+
+	-- if command
+	docommand(message)
+
+	-- if msg is log
+	show_log_info(message)
+
+	-- if message is connect info
+	show_tf2_server_info(message)
+end)
+
+client:on("voiceChannelJoin", function(member, channel)
+	if not channel.guild.connection then
+		channel:join()
+	end
+end)
+
+client:on("voiceChannelLeave", function(member, channel)
+	if channel.guild.connection then
+		channel:leave()
 	end
 end)
 
