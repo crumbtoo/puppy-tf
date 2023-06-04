@@ -1,17 +1,2 @@
-options.lua
-discordia.log
-gateway.json
-*.o
-deps/*.so
-etc/test.lua
-etc/logs/*.o
-etc/logs/*.so
-etc/logs/out.png
-etc/logs/binout
-etc/logs/3222669.json
-etc/lsqlite3
-etc/lsqlite3/lsqlite3_fsl09x/
-etc/lsqlite3/lsqlite3_fsl09x.zip
-puppy.db
-**.so
-**.o
+node_modules
+package.json package-lock.json
