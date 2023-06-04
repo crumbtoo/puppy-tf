@@ -1,0 +1,9 @@
+{
+	"name": "puppy.tf",
+	"version": "0.0.0",
+	
+	"dependencies":
+	{
+		"discord.js": "^14.11.0"
+	}
+}
